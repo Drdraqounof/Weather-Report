@@ -172,10 +172,10 @@ const WeatherApp = () => {
             list.forEach((entry) => {
               const dayKey = new Date((entry.dt + (offset || 0)) * 1000).toISOString().slice(0, 10);
               if (!daysMap[dayKey]) {
-                daysMap[dayKey] = { high: entry.main.temp_max, low: entry.main.temp_min, icon: entry.weather?.[0]?.icon, desc: entry.weather?.[0]?.description };
+                daysMap[dayKey] = { high: entry.main?.temp_max, low: entry.main?.temp_min, icon: entry.weather?.[0]?.icon, desc: entry.weather?.[0]?.description };
               } else {
-                daysMap[dayKey].high = Math.max(daysMap[dayKey].high, entry.main.temp_max);
-                daysMap[dayKey].low = Math.min(daysMap[dayKey].low, entry.main.temp_min);
+                daysMap[dayKey].high = Math.max(daysMap[dayKey].high, entry.main?.temp_max);
+                daysMap[dayKey].low = Math.min(daysMap[dayKey].low, entry.main?.temp_min);
               }
             });
             const dayKeys = Object.keys(daysMap).slice(0, 7);
