@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
+// Note: Add this to your App.css file:
+/*
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+*/
+
 const WeatherApp = () => {
   const [currentPage, setCurrentPage] = useState('main');
   const [selectedHour, setSelectedHour] = useState(null);
@@ -11,6 +20,80 @@ const WeatherApp = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [city, setCity] = useState('Philadelphia');
+  const [backgroundGradient, setBackgroundGradient] = useState(
+    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+  );
+
+  // Function to determine the appropriate gradient based on weather conditions
+  const getWeatherGradient = (weatherDesc, icon, temp) => {
+    const desc = weatherDesc?.toLowerCase() || '';
+    const isNight = icon?.includes('n'); // Icons with 'n' are nighttime
+    
+    // Night conditions
+    if (isNight) {
+      if (desc.includes('clear')) {
+        return 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)'; // Deep night blue
+      }
+      if (desc.includes('rain') || desc.includes('drizzle')) {
+        return 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'; // Dark rainy night
+      }
+      if (desc.includes('cloud')) {
+        return 'linear-gradient(135deg, #2c3e50 0%, #3498db 50%, #2980b9 100%)'; // Cloudy night
+      }
+      if (desc.includes('snow')) {
+        return 'linear-gradient(135deg, #373b44 0%, #4a5568 50%, #718096 100%)'; // Snowy night
+      }
+      if (desc.includes('thunder') || desc.includes('storm')) {
+        return 'linear-gradient(135deg, #141e30 0%, #243b55 50%, #1a1a2e 100%)'; // Stormy night
+      }
+      return 'linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%)'; // Default night
+    }
+    
+    // Day conditions
+    if (desc.includes('clear') || desc.includes('sunny')) {
+      if (temp > 85) {
+        return 'linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #ff6b6b 100%)'; // Hot sunny
+      }
+      return 'linear-gradient(135deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%)'; // Perfect sunny
+    }
+    
+    if (desc.includes('rain') || desc.includes('drizzle')) {
+      if (desc.includes('thunder') || desc.includes('storm')) {
+        return 'linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #596275 100%)'; // Stormy
+      }
+      return 'linear-gradient(135deg, #5f72bd 0%, #9b23ea 50%, #667eea 100%)'; // Rainy
+    }
+    
+    if (desc.includes('cloud')) {
+      if (desc.includes('partly') || desc.includes('few')) {
+        return 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 50%, #fbc2eb 100%)'; // Partly cloudy
+      }
+      return 'linear-gradient(135deg, #bdc3c7 0%, #8e9eab 50%, #7f8c9d 100%)'; // Overcast
+    }
+    
+    if (desc.includes('snow')) {
+      return 'linear-gradient(135deg, #e0eafc 0%, #cfdef3 50%, #a8c0ff 100%)'; // Snowy
+    }
+    
+    if (desc.includes('fog') || desc.includes('mist') || desc.includes('haze')) {
+      return 'linear-gradient(135deg, #bdc3c7 0%, #b8c6db 50%, #d8e2dc 100%)'; // Foggy
+    }
+    
+    // Default fallback
+    return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // Original purple
+  };
+
+  // Update background gradient when weather info changes
+  useEffect(() => {
+    if (weatherInfo) {
+      const gradient = getWeatherGradient(
+        weatherInfo.desc,
+        weatherInfo.icon,
+        weatherInfo.temp
+      );
+      setBackgroundGradient(gradient);
+    }
+  }, [weatherInfo]);
 
   const getIconFromCode = (code) => {
     const mapping = {
@@ -312,23 +395,30 @@ const WeatherApp = () => {
           </div>
 
           <div className="search-form-container">
-            <form
-              className="search-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                fetchWeather(city);
-                setCurrentPage('main');
-              }}
-            >
+            <div className="search-form">
               <input
                 className="city-input"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    fetchWeather(city);
+                    setCurrentPage('main');
+                  }
+                }}
                 placeholder="Enter city"
                 aria-label="City"
               />
-              <button type="submit" className="search-btn">Search</button>
-            </form>
+              <button 
+                onClick={() => {
+                  fetchWeather(city);
+                  setCurrentPage('main');
+                }}
+                className="search-btn"
+              >
+                Search
+              </button>
+            </div>
           </div>
 
           <div className="icon-group">
@@ -874,34 +964,47 @@ const WeatherApp = () => {
     );
   };
 
+  // Apply gradient to body element
+  useEffect(() => {
+    if (backgroundGradient) {
+      document.body.style.background = backgroundGradient;
+      document.body.style.backgroundSize = '200% 200%';
+      document.body.style.animation = 'gradientShift 15s ease infinite';
+      document.body.style.transition = 'background 1.5s ease-in-out';
+      document.body.style.minHeight = '100vh';
+    }
+    
+    return () => {
+      // Cleanup
+      document.body.style.background = '';
+      document.body.style.backgroundSize = '';
+      document.body.style.animation = '';
+    };
+  }, [backgroundGradient]);
+
   return (
     <>
       <div id="particles"></div>
-
-
-
-      <div id="particles"></div>
-
       <div className="container">
-        {loading && (
-          <div className="loading-overlay">
-            <div className="loading-card">
-              <div className="spinner" />
-              <div className="loading-text">Loading weather for {city}...</div>
+          {loading && (
+            <div className="loading-overlay">
+              <div className="loading-card">
+                <div className="spinner" />
+                <div className="loading-text">Loading weather for {city}...</div>
+              </div>
             </div>
-          </div>
-        )}
-        {!loading && error && (
-          <div className="card" style={{ textAlign: 'center', color: 'white', padding: '60px 30px' }}>
-            {error}
-          </div>
-        )}
-        {!loading && !error && currentPage === 'main' && <MainPage />}
-        {!loading && !error && currentPage === 'hourly-detail' && <HourlyDetailPage />}
-        {!loading && !error && currentPage === 'day-detail' && <DayDetailPage />}
-        {!loading && !error && currentPage === 'hourly-full' && <FullHourlyPage />}
-        {!loading && !error && currentPage === 'daily-full' && <FullDailyPage />}
-      </div>
+          )}
+          {!loading && error && (
+            <div className="card" style={{ textAlign: 'center', color: 'white', padding: '60px 30px' }}>
+              {error}
+            </div>
+          )}
+          {!loading && !error && currentPage === 'main' && <MainPage />}
+          {!loading && !error && currentPage === 'hourly-detail' && <HourlyDetailPage />}
+          {!loading && !error && currentPage === 'day-detail' && <DayDetailPage />}
+          {!loading && !error && currentPage === 'hourly-full' && <FullHourlyPage />}
+          {!loading && !error && currentPage === 'daily-full' && <FullDailyPage />}
+        </div>
     </>
   );
 };
